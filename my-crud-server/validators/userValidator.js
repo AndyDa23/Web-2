@@ -2,7 +2,7 @@ const Joi = require("joi");
 
 const userSchema = Joi.object({
   name: Joi.string().min(2).max(50).required().messages({
-    "string.empty": "Имя не может быть пустым",
+    "string.empty": " Поле 'name' не может быть пустым",
     "string.min": "Имя должно содержать минимум 2 символа",
     "string.max": "Имя не может превышать 50 символов",
     "any.required": "Поле 'name' обязательно"
