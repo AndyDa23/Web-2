@@ -1,0 +1,13 @@
+[
+  {
+    "id": 2,
+    "email": "bob@example.com"
+  },
+  {
+    "id": 1757663729603,
+    "to": "example@gmail.com",
+    "subject": "Hello WORLD!",
+    "body": "Это тестовое письмо",
+    "sentAt": "2025-09-12T07:55:29.603Z"
+  }
+]
