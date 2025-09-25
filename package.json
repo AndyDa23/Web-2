@@ -4,8 +4,9 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "dev": "nodemon my-crud-server/server.js",
-    "start": "node server.js"
+  "start": "node my-crud-server/server.js",
+  "dev": "nodemon my-crud-server/server.js"
+
   },
   "repository": {
     "type": "git",
