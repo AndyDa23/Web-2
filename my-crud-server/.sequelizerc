@@ -1,0 +1,8 @@
+const path = require('path');
+
+module.exports = {
+  'config': path.resolve('my-crud-server', 'data', 'config.json'),
+  'models-path': path.resolve('my-crud-server', 'data', 'models'),
+  'seeders-path': path.resolve('my-crud-server', 'data', 'seeders'),
+  'migrations-path': path.resolve('my-crud-server', 'data', 'migrations')
+};
