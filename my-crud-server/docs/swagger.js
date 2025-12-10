@@ -1,64 +1,58 @@
-const swaggerJSDoc = require("swagger-jsdoc");
-const path = require("path");
-
-const options = {
-  definition: {
-    openapi: "3.0.0",
-    info: {
-      title: "CRUD Users & Tasks API",
-      version: "1.0.0",
-      description: "Пример REST API с пользователями, задачами и email-сообщениями",
-    },
-    servers: [
-      {
-        url: "http://localhost:3000",
-        description: "Локальный сервер",
-      },
-    ],
-    tags: [
-      {
-        name: "Users",
-        description: "Операции с пользователями"
-      },
-      {
-        name: "Tasks",
-        description: "Операции с задачами"
-      },
-      {
-        name: "Emails",
-        description: "Операции с email-сообщениями"
+module.exports = {
+  openapi: "3.0.0",
+  info: {
+    title: "My API",
+    version: "1.0.0",
+  },
+  paths: {
+    "/auth/register": {
+      post: {
+        tags: ["Auth"],
+        summary: "Регистрация пользователя",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                example: {
+                  email: "test@gmail.com",
+                  password: "123456"
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          200: {
+            description: "OK",
+          }
+        }
       }
-    ],
-    components: {
-      schemas: {
-        User: {
-          type: "object",
-          properties: {
-            name: { type: "string" },
-            email: { type: "string", format: "email" }
+    },
+
+    "/auth/login": {
+      post: {
+        tags: ["Auth"],
+        summary: "Авторизация пользователя",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                example: {
+                  email: "test@gmail.com",
+                  password: "123456"
+                }
+              }
+            }
           }
         },
-        Task: {
-          type: "object",
-          properties: {
-            title: { type: "string" },
-            completed: { type: "boolean" },
-          }
-        },
-        Email: {
-          type: "object",
-          properties: {
-            to: { type: "string", format: "email" },
-            subject: { type: "string" },
-            body: { type: "string" },
+        responses: {
+          200: {
+            description: "JWT Token"
           }
         }
       }
     }
-  },
-  apis: [path.resolve(__dirname, "../routes/*.js")],
+  }
 };
-
-const swaggerSpec = swaggerJSDoc(options);
-
-module.exports = swaggerSpec;
