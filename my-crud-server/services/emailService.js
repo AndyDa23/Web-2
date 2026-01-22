@@ -6,26 +6,31 @@ class EmailsService {
   }
 
   getById(id) {
-    return emails.find(e => e.id === parseInt(id));
+    return emails.find(e => e.id === Number(id));
   }
 
-  create(email) {
-    email.id = emails.length + 1;
-    emails.push(email);
-    return email;
+  create({ address, verified, userId }) {
+    const newEmail = {
+      id: emails.length + 1,
+      address,
+      verified: verified || false,
+      userId
+    };
+    emails.push(newEmail);
+    return newEmail;
   }
 
   update(id, newEmail) {
-    const index = emails.findIndex(e => e.id === parseInt(id));
+    const index = emails.findIndex(e => e.id === Number(id));
     if (index === -1) return null;
     emails[index] = { ...emails[index], ...newEmail };
     return emails[index];
   }
 
   delete(id) {
-    const index = emails.findIndex(e => e.id === parseInt(id));
+    const index = emails.findIndex(e => e.id === Number(id));
     if (index === -1) return null;
-    return emails.splice(index, 1);
+    return emails.splice(index, 1)[0];
   }
 }
 

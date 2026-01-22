@@ -1,18 +1,18 @@
+// my-crud-server/routes/emails.js
+console.log("✅ emails.js загружен");
 const express = require("express");
 const router = express.Router();
-const validationMiddleware = require("../middleware/validationMiddleware");
-const { sendEmail } = require("../validators/emailValidator");
-const emailStorageService = require("../services/emailStorageService");
+const { Email } = require("../models");
 
 /**
  * @swagger
  * /emails:
  *   get:
- *     summary: Получить все email-сообщения
+ *     summary: Получить все email-адреса
  *     tags: ["Emails"]
  *     responses:
  *       200:
- *         description: Список писем
+ *         description: Список email
  *         content:
  *           application/json:
  *             schema:
@@ -24,7 +24,7 @@ const emailStorageService = require("../services/emailStorageService");
  *                     $ref: '#/components/schemas/Email'
  */
 router.get("/", async (req, res) => {
-  const emails = await emailStorageService.getEmails();
+  const emails = await Email.findAll();
   res.json({ emails });
 });
 
@@ -38,6 +38,7 @@ router.get("/", async (req, res) => {
  *       - in: path
  *         name: id
  *         required: true
+ *         description: ID email-адреса
  *         schema:
  *           type: integer
  *     responses:
@@ -51,11 +52,8 @@ router.get("/", async (req, res) => {
  *         description: Email не найден
  */
 router.get("/:id", async (req, res) => {
-  const emails = await emailStorageService.getEmails();
-  const email = emails.find(e => e.id === parseInt(req.params.id));
-  if (!email) {
-    return res.status(404).json({ message: "Email не найден" });
-  }
+  const email = await Email.findByPk(req.params.id);
+  if (!email) return res.status(404).json({ message: "Email не найден" });
   res.json({ email });
 });
 
@@ -63,35 +61,27 @@ router.get("/:id", async (req, res) => {
  * @swagger
  * /emails:
  *   post:
- *     summary: Отправить email
+ *     summary: Создать email
  *     tags: ["Emails"]
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/Email'
+ *             $ref: '#/components/schemas/EmailCreate'
  *     responses:
  *       201:
- *         description: Email отправлен
+ *         description: Email создан
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Email'
+ *       400:
+ *         description: Ошибка валидации
  */
-router.post("/", validationMiddleware(sendEmail), async (req, res) => {
-  try {
-    const savedEmail = await emailStorageService.addEmail(req.validatedBody);
-    res.status(201).json({
-      message: "Email отправлен и сохранён",
-       savedEmail
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Не удалось сохранить письмо"
-    });
-  }
+router.post("/", async (req, res) => {
+  const email = await Email.create(req.body);
+  res.status(201).json({ email });
 });
 
 /**
@@ -104,6 +94,7 @@ router.post("/", validationMiddleware(sendEmail), async (req, res) => {
  *       - in: path
  *         name: id
  *         required: true
+ *         description: ID email-адреса
  *         schema:
  *           type: integer
  *     responses:
@@ -113,15 +104,10 @@ router.post("/", validationMiddleware(sendEmail), async (req, res) => {
  *         description: Email не найден
  */
 router.delete("/:id", async (req, res) => {
-  try {
-    await emailStorageService.deleteEmail(req.params.id);
-    return res.status(204).send();
-  } catch (error) {
-    if (error.message === "Письмо не найдено") {
-      return res.status(404).json({ message: "Email не найден" });
-    }
-    return res.status(500).json({ message: "Не удалось удалить email" });
-  }
+  const email = await Email.findByPk(req.params.id);
+  if (!email) return res.status(404).json({ message: "Email не найден" });
+  await email.destroy();
+  res.status(204).send();
 });
 
 module.exports = router;

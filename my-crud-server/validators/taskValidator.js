@@ -7,10 +7,17 @@ const taskSchema = Joi.object({
     "string.max": "Заголовок не может превышать 100 символов",
     "any.required": "Поле 'title' обязательно"
   }),
-  completed: Joi.boolean().default(false)
+  description: Joi.string().optional().allow("").messages({
+    "string.base": "Описание должно быть строкой"
+  }),
+  completed: Joi.boolean().default(false),
+  userId: Joi.number().integer().required().messages({
+    "number.base": "userId должен быть числом",
+    "any.required": "Поле 'userId' обязательно"
+  })
 });
 
 module.exports = {
   createTask: taskSchema,
-  updateTask: taskSchema.options({ abortEarly: false })
+  updateTask: taskSchema.fork(["title", "description", "completed", "userId"], field => field.optional()).options({ abortEarly: false })
 };

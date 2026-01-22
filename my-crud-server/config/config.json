@@ -1,0 +1,34 @@
+{
+  "development": {
+    "username": "admin",
+    "password": "admin",
+    "database": "mydb",
+    "host": "localhost",
+    "dialect": "postgres",
+    "logging": false
+  },
+  "docker": {
+    "username": "admin",
+    "password": "admin",
+    "database": "mydb",
+    "host": "postgres",
+    "dialect": "postgres",
+    "logging": false
+  },
+  "test": {
+    "username": "admin",
+    "password": "admin",
+    "database": "mydb_test",
+    "host": "postgres",
+    "dialect": "postgres",
+    "logging": false
+  },
+  "production": {
+    "username": "admin",
+    "password": "admin",
+    "database": "mydb_prod",
+    "host": "postgres",
+    "dialect": "postgres",
+    "logging": false
+  }
+}

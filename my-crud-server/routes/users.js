@@ -1,8 +1,8 @@
 const express = require("express");
 const router = express.Router();
+const { User } = require("../models");
 const validationMiddleware = require("../middleware/validationMiddleware");
 const { createUser, updateUser } = require("../validators/userValidator");
-const userStorageService = require("../services/userStorageService");
 
 /**
  * @swagger
@@ -24,8 +24,13 @@ const userStorageService = require("../services/userStorageService");
  *                     $ref: '#/components/schemas/User'
  */
 router.get("/", async (req, res) => {
-  const users = await userStorageService.getUsers();
-  res.json({ users });
+  try {
+    const users = await User.findAll();
+    res.json({ users });
+  } catch (error) {
+    console.error("Ошибка при получении пользователей:", error);
+    res.status(500).json({ message: "Ошибка сервера" });
+  }
 });
 
 /**
@@ -38,6 +43,7 @@ router.get("/", async (req, res) => {
  *       - in: path
  *         name: id
  *         required: true
+ *         description: ID пользователя
  *         schema:
  *           type: integer
  *     responses:
@@ -51,12 +57,15 @@ router.get("/", async (req, res) => {
  *         description: Пользователь не найден
  */
 router.get("/:id", async (req, res) => {
-  const users = await userStorageService.getUsers();
-  const user = users.find(u => u.id === parseInt(req.params.id));
-  if (!user) {
-    return res.status(404).json({ message: "Пользователь не найден" });
+  try {
+    const id = Number(req.params.id);
+    const user = await User.findByPk(id);
+    if (!user) return res.status(404).json({ message: "Пользователь не найден" });
+    res.json({ user });
+  } catch (error) {
+    console.error("Ошибка при получении пользователя:", error);
+    res.status(500).json({ message: "Ошибка сервера" });
   }
-  res.json({ user });
 });
 
 /**
@@ -70,7 +79,7 @@ router.get("/:id", async (req, res) => {
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/User'
+ *             $ref: '#/components/schemas/UserCreate'
  *     responses:
  *       201:
  *         description: Пользователь создан
@@ -78,19 +87,16 @@ router.get("/:id", async (req, res) => {
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/User'
+ *       400:
+ *         description: Ошибка валидации
  */
 router.post("/", validationMiddleware(createUser), async (req, res) => {
   try {
-    const savedUser = await userStorageService.addUser(req.validatedBody);
-    res.status(201).json({
-      message: "Пользователь создан и сохранён",
-       savedUser
-    });
+    const savedUser = await User.create(req.validatedBody);
+    res.status(201).json({ message: "Пользователь создан", user: savedUser });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Не удалось сохранить пользователя"
-    });
+    console.error("Ошибка при создании пользователя:", error);
+    res.status(500).json({ message: "Не удалось сохранить пользователя" });
   }
 });
 
@@ -104,6 +110,7 @@ router.post("/", validationMiddleware(createUser), async (req, res) => {
  *       - in: path
  *         name: id
  *         required: true
+ *         description: ID пользователя
  *         schema:
  *           type: integer
  *     requestBody:
@@ -111,7 +118,7 @@ router.post("/", validationMiddleware(createUser), async (req, res) => {
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/User'
+ *             $ref: '#/components/schemas/UserUpdate'
  *     responses:
  *       200:
  *         description: Пользователь обновлён
@@ -121,18 +128,18 @@ router.post("/", validationMiddleware(createUser), async (req, res) => {
  *               $ref: '#/components/schemas/User'
  *       404:
  *         description: Пользователь не найден
+ *       400:
+ *         description: Ошибка валидации
  */
 router.put("/:id", validationMiddleware(updateUser), async (req, res) => {
   try {
-    const updatedUser = await userStorageService.updateUser(req.params.id, req.validatedBody);
-    res.json({
-      message: "Пользователь обновлён",
-       updatedUser
-    });
+    const id = Number(req.params.id);
+    const user = await User.findByPk(id);
+    if (!user) return res.status(404).json({ message: "Пользователь не найден" });
+    await user.update(req.validatedBody);
+    res.json({ message: "Пользователь обновлён", user });
   } catch (error) {
-    if (error.message === "Пользователь не найден") {
-      return res.status(404).json({ message: "Пользователь не найден" });
-    }
+    console.error("Ошибка при обновлении пользователя:", error);
     res.status(500).json({ message: "Не удалось обновить пользователя" });
   }
 });
@@ -147,6 +154,7 @@ router.put("/:id", validationMiddleware(updateUser), async (req, res) => {
  *       - in: path
  *         name: id
  *         required: true
+ *         description: ID пользователя
  *         schema:
  *           type: integer
  *     responses:
@@ -157,13 +165,14 @@ router.put("/:id", validationMiddleware(updateUser), async (req, res) => {
  */
 router.delete("/:id", async (req, res) => {
   try {
-    await userStorageService.deleteUser(req.params.id);
-    return res.status(200).send();
+    const id = Number(req.params.id);
+    const user = await User.findByPk(id);
+    if (!user) return res.status(404).json({ message: "Пользователь не найден" });
+    await user.destroy();
+    res.status(204).send();
   } catch (error) {
-    if (error.message === "Пользователь не найден") {
-      return res.status(404).json({ message: "Пользователь не найден" });
-    }
-    return res.status(500).json({ message: "Не удалось удалить пользователя" });
+    console.error("Ошибка при удалении пользователя:", error);
+    res.status(500).json({ message: "Не удалось удалить пользователя" });
   }
 });
 

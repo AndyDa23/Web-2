@@ -1,8 +1,8 @@
 const express = require("express");
-const router = express.Router(); // создаём роутер
+const router = express.Router();
+const { Task } = require("../models");
 const validationMiddleware = require("../middleware/validationMiddleware");
 const { createTask, updateTask } = require("../validators/taskValidator");
-const taskStorageService = require("../services/taskStorageService");
 
 /**
  * @swagger
@@ -24,8 +24,13 @@ const taskStorageService = require("../services/taskStorageService");
  *                     $ref: '#/components/schemas/Task'
  */
 router.get("/", async (req, res) => {
-  const tasks = await taskStorageService.getTasks();
-  res.json({ tasks });
+  try {
+    const tasks = await Task.findAll();
+    res.json({ tasks });
+  } catch (error) {
+    console.error("Ошибка при получении задач:", error);
+    res.status(500).json({ message: "Ошибка сервера" });
+  }
 });
 
 /**
@@ -43,20 +48,19 @@ router.get("/", async (req, res) => {
  *     responses:
  *       200:
  *         description: Задача найдена
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Task'
  *       404:
  *         description: Задача не найдена
  */
 router.get("/:id", async (req, res) => {
-  const tasks = await taskStorageService.getTasks();
-  const task = tasks.find(t => t.id === parseInt(req.params.id));
-  if (!task) {
-    return res.status(404).json({ message: "Задача не найдена" });
+  try {
+    const id = Number(req.params.id);
+    const task = await Task.findByPk(id);
+    if (!task) return res.status(404).json({ message: "Задача не найдена" });
+    res.json({ task });
+  } catch (error) {
+    console.error("Ошибка при получении задачи:", error);
+    res.status(500).json({ message: "Ошибка сервера" });
   }
-  res.json({ task });
 });
 
 /**
@@ -70,27 +74,20 @@ router.get("/:id", async (req, res) => {
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/Task'
+ *             $ref: '#/components/schemas/TaskCreate'
  *     responses:
  *       201:
  *         description: Задача создана
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Task'
+ *       400:
+ *         description: Ошибка валидации
  */
 router.post("/", validationMiddleware(createTask), async (req, res) => {
   try {
-    const savedTask = await taskStorageService.addTask(req.validatedBody);
-    res.status(201).json({
-      message: "Задача создана и сохранена",
-       savedTask
-    });
+    const savedTask = await Task.create(req.validatedBody);
+    res.status(201).json({ message: "Задача создана", task: savedTask });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Не удалось сохранить задачу"
-    });
+    console.error("Ошибка при создании задачи:", error);
+    res.status(500).json({ message: "Не удалось создать задачу" });
   }
 });
 
@@ -111,28 +108,22 @@ router.post("/", validationMiddleware(createTask), async (req, res) => {
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/Task'
+ *             $ref: '#/components/schemas/TaskUpdate'
  *     responses:
  *       200:
  *         description: Задача обновлена
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Task'
  *       404:
  *         description: Задача не найдена
  */
 router.put("/:id", validationMiddleware(updateTask), async (req, res) => {
   try {
-    const updatedTask = await taskStorageService.updateTask(req.params.id, req.validatedBody);
-    res.json({
-      message: "Задача обновлена",
-       updatedTask
-    });
+    const id = Number(req.params.id);
+    const task = await Task.findByPk(id);
+    if (!task) return res.status(404).json({ message: "Задача не найдена" });
+    await task.update(req.validatedBody);
+    res.json({ message: "Задача обновлена", task });
   } catch (error) {
-    if (error.message === "Задача не найдена") {
-      return res.status(404).json({ message: "Задача не найдена" });
-    }
+    console.error("Ошибка при обновлении задачи:", error);
     res.status(500).json({ message: "Не удалось обновить задачу" });
   }
 });
@@ -157,14 +148,15 @@ router.put("/:id", validationMiddleware(updateTask), async (req, res) => {
  */
 router.delete("/:id", async (req, res) => {
   try {
-    await taskStorageService.deleteTask(req.params.id);
-    return res.status(200).send();
+    const id = Number(req.params.id);
+    const task = await Task.findByPk(id);
+    if (!task) return res.status(404).json({ message: "Задача не найдена" });
+    await task.destroy();
+    res.status(204).send();
   } catch (error) {
-    if (error.message === "Задача не найдена") {
-      return res.status(404).json({ message: "Задача не найдена" });
-    }
-    return res.status(500).json({ message: "Не удалось удалить задачу" });
+    console.error("Ошибка при удалении задачи:", error);
+    res.status(500).json({ message: "Не удалось удалить задачу" });
   }
 });
 
-module.exports = router; 
+module.exports = router;

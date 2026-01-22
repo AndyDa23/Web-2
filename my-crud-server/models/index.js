@@ -1,17 +1,33 @@
-const Sequelize = require("sequelize");
-const sequelize = new Sequelize({
-  dialect: "sqlite", // или mysql/postgres
-  storage: "database.sqlite" // для sqlite
-});
+// my-crud-server/models/index.js
+const fs = require("fs");
+const path = require("path");
+const { Sequelize, DataTypes } = require("sequelize");
 
-const User = require("./user")(sequelize, Sequelize.DataTypes);
-// Тут можно подключить Task, Email и др.:
-// const Task = require("./task")(sequelize, Sequelize.DataTypes);
-// const Email = require("./email")(sequelize, Sequelize.DataTypes);
+const basename = path.basename(__filename);
+const env = process.env.NODE_ENV || "development";
+const config = require(__dirname + "/../config/config.json")[env];
 
-module.exports = {
-  sequelize,
-  User,
-  // Task,
-  // Email
-};
+const sequelize = new Sequelize(
+  config.database,
+  config.username,
+  config.password,
+  config
+);
+
+const db = {};
+
+db.User = require("./user")(sequelize, DataTypes);
+db.Task = require("./task")(sequelize, DataTypes);
+db.Email = require("./email")(sequelize, DataTypes);
+
+// Ассоциации
+db.User.hasMany(db.Task, { foreignKey: "userId", as: "tasks" });
+db.Task.belongsTo(db.User, { foreignKey: "userId", as: "user" });
+
+db.User.hasMany(db.Email, { foreignKey: "userId", as: "emails" });
+db.Email.belongsTo(db.User, { foreignKey: "userId", as: "user" });
+
+db.sequelize = sequelize;
+db.Sequelize = Sequelize;
+
+module.exports = db;

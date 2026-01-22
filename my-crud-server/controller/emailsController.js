@@ -1,26 +1,30 @@
-const emailsService = require('../services/emailsService');
+const emailsService = require("../services/emailsService");
 
-exports.getEmails = (req, res) => res.json(emailsService.getAll());
+exports.getAll = (req, res) => {
+  res.json(emailsService.getAll());
+};
 
-exports.getEmail = (req, res) => {
-  const email = emailsService.getById(req.params.id);
-  if (!email) return res.status(404).json({ message: 'Email not found' });
+exports.getById = (req, res) => {
+  const email = emailsService.getById(Number(req.params.id));
+  if (!email) return res.status(404).json({ error: "Email not found" });
   res.json(email);
 };
 
-exports.createEmail = (req, res) => {
-  const newEmail = emailsService.create(req.body);
+exports.create = (req, res) => {
+  const { address, verified, userId } = req.body;
+  const newEmail = emailsService.create({ address, verified, userId });
   res.status(201).json(newEmail);
 };
 
-exports.updateEmail = (req, res) => {
-  const updated = emailsService.update(req.params.id, req.body);
-  if (!updated) return res.status(404).json({ message: 'Email not found' });
+exports.update = (req, res) => {
+  const { address, verified, userId } = req.body;
+  const updated = emailsService.update(Number(req.params.id), { address, verified, userId });
+  if (!updated) return res.status(404).json({ error: "Email not found" });
   res.json(updated);
 };
 
-exports.deleteEmail = (req, res) => {
-  const deleted = emailsService.delete(req.params.id);
-  if (!deleted) return res.status(404).json({ message: 'Email not found' });
-  res.json({ message: 'Email deleted' });
+exports.delete = (req, res) => {
+  const deleted = emailsService.delete(Number(req.params.id));
+  if (!deleted) return res.status(404).json({ error: "Email not found" });
+  res.json({ message: "Email deleted", deleted });
 };

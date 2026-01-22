@@ -1,24 +1,30 @@
 const tasksService = require("../services/tasksService");
 
-exports.getAll = (req, res) => res.json(tasksService.getAll());
+exports.getAll = (req, res) => {
+  res.json(tasksService.getAll());
+};
+
 exports.getById = (req, res) => {
-  const task = tasksService.getById(parseInt(req.params.id));
+  const task = tasksService.getById(Number(req.params.id));
   if (!task) return res.status(404).json({ error: "Task not found" });
   res.json(task);
 };
+
 exports.create = (req, res) => {
-  const { title, userId } = req.body;
-  const task = tasksService.create({ title, userId });
+  const { title, description, userId } = req.body;
+  const task = tasksService.create({ title, description, userId });
   res.status(201).json(task);
 };
+
 exports.update = (req, res) => {
-  const { title, completed } = req.body;
-  const task = tasksService.update(parseInt(req.params.id), { title, completed });
+  const { title, description, completed, userId } = req.body;
+  const task = tasksService.update(Number(req.params.id), { title, description, completed, userId });
   if (!task) return res.status(404).json({ error: "Task not found" });
   res.json(task);
 };
+
 exports.delete = (req, res) => {
-  const task = tasksService.delete(parseInt(req.params.id));
+  const task = tasksService.delete(Number(req.params.id));
   if (!task) return res.status(404).json({ error: "Task not found" });
-  res.json(task);
+  res.json({ message: "Task deleted", task });
 };

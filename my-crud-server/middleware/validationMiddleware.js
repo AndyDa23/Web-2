@@ -5,14 +5,14 @@ const validationMiddleware = (schema) => {
     if (error) {
       const errors = {};
       error.details.forEach((detail) => {
-        const fieldName = detail.path[0]; // Имя поля (например, "name")
-        errors[fieldName] = detail.message; // Сохраняем сообщение по имени поля
+        const fieldName = detail.path[0];
+        errors[fieldName] = detail.message; 
       });
 
       return res.status(400).json({
         success: false,
         message: "Ошибка валидации данных",
-        errors: errors // ← Теперь это объект: { name: "...", email: "..." }
+        errors: errors 
       });
     }
 
